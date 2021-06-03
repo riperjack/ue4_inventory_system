@@ -11,7 +11,7 @@ AFPSCharacter::AFPSCharacter()
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	CameraComponent->SetupAttachment(GetCapsuleComponent());
-	CameraComponent->RelativeLocation = FVector(0, 0, BaseEyeHeight);
+	CameraComponent->GetRelativeLocation() = FVector(0, 0, BaseEyeHeight);
 	CameraComponent->bUsePawnControlRotation = true;
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> InventoryObj(TEXT("/Game/FirstPerson/UI/InventoryWidget"));
