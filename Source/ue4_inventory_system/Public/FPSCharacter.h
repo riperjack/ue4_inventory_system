@@ -33,6 +33,10 @@ protected:
 	void MoveRight(float Val);
 	void PickupItem();
 	void ToggleInventory();
+
+	/* Executed on completion of async linetrace */
+	void PickupTraceComplete(const FTraceHandle& TraceHandle, FTraceDatum& TraceDatum);
+
 	APlayerController* PlayerController;
 
 private:
@@ -44,6 +48,9 @@ private:
 	UCustomUserWidget* RaycastInfoWidgetRef;
 	UCustomUserWidget* InventoryWidgetRef;
 	int GetFirstNonZeroedIndex(TArray<ABaseItem*> Array);
+
+	/* Function delegate for Async line trace in tick */
+	FTraceDelegate PickupTraceDelegate;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
