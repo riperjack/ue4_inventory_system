@@ -33,6 +33,11 @@ void AFPSCharacter::BeginPlay()
 	RaycastInfoWidgetRef = CreateWidget <UCustomUserWidget>(GetWorld()->GetFirstPlayerController(), RaycastInfoWidgetClass);
 	RaycastInfoWidgetRef->AddToViewport();
 	RaycastInfoWidgetRef->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	if (!PickupTraceDelegate.IsBound())
+	{
+		PickupTraceDelegate.BindUObject(this, &AFPSCharacter::PickupTraceComplete);
+	}
 }
 
 void AFPSCharacter::Tick(float DeltaTime)
@@ -45,19 +50,8 @@ void AFPSCharacter::Tick(float DeltaTime)
 
 	FCollisionQueryParams RV_TraceParams = FCollisionQueryParams(FName(TEXT("RV_Trace")), true, this);
 	RV_TraceParams.bTraceComplex = true;
-	RV_TraceParams.bTraceAsyncScene = true;
-	RV_TraceParams.bReturnPhysicalMaterial = false;
-	FHitResult RV_Hit(ForceInit);
-	GetWorld()->LineTraceSingleByChannel(RV_Hit, CameraLocation, TraceEnd, ECollisionChannel::ECC_Visibility);
+	GetWorld()->AsyncLineTraceByChannel(EAsyncTraceType::Single, CameraLocation, TraceEnd, ECollisionChannel::ECC_Visibility, RV_TraceParams, FCollisionResponseParams::DefaultResponseParam, &PickupTraceDelegate);
 
-	ABaseItem* BaseItem = Cast<ABaseItem>(RV_Hit.GetActor());
-
-	ItemInSight = nullptr;
-
-	if (BaseItem)
-	{
-		ItemInSight = BaseItem;
-	}
 }
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -145,5 +139,22 @@ void AFPSCharacter::DropItem(int ItemIdx)
 		DroppedItem->PrepareForDrop();
 		DroppedItem->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		Inventory[ItemIdx] = nullptr;
+	}
+}
+
+void AFPSCharacter::PickupTraceComplete(const FTraceHandle& TraceHandle, FTraceDatum& TraceDatum)
+{
+	for (const FHitResult& HitResult : TraceDatum.OutHits)
+	{
+		ItemInSight = nullptr;
+
+		if (HitResult.bBlockingHit)
+		{
+			ABaseItem* BaseItem = Cast<ABaseItem>(HitResult.GetActor());
+			if (BaseItem)
+			{
+				ItemInSight = BaseItem;
+			}
+		}
 	}
 }
